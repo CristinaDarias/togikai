@@ -2,10 +2,7 @@
 
 export function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key) {
     throw new Error('Supabase no configurado para admin');
@@ -69,11 +66,7 @@ export async function syncFighterRecordsFromFights() {
     const fighterBStat = stats.get(fight.fighter_b);
     if (!fighterAStat || !fighterBStat) continue;
 
-    if (isDraw) {
-      fighterAStat.points += 0;
-      fighterBStat.points += 0;
-      continue;
-    }
+    if (isDraw) continue;
 
     const winnerStat = stats.get(fight.winner);
     if (winnerStat) {

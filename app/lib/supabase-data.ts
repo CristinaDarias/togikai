@@ -30,12 +30,10 @@ type SupabaseFight = {
 
 function supabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!url || !anonKey) return null;
-  return { url, anonKey };
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
 }
 
 async function supabaseGet<T>(path: string): Promise<T[]> {
@@ -44,8 +42,8 @@ async function supabaseGet<T>(path: string): Promise<T[]> {
 
   const response = await fetch(`${config.url}/rest/v1/${path}`, {
     headers: {
-      apikey: config.anonKey,
-      Authorization: `Bearer ${config.anonKey}`,
+      apikey: config.publishableKey,
+      Authorization: `Bearer ${config.publishableKey}`,
       'Content-Type': 'application/json',
     },
     cache: 'no-store',
@@ -100,5 +98,3 @@ export async function loadFights(): Promise<FightRecord[]> {
     return localFights;
   }
 }
-
-
