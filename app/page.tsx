@@ -1,65 +1,67 @@
-import Image from "next/image";
+﻿import Link from 'next/link';
+import ChampionSpotlight from './_components/champion-spotlight';
+import LatestFightShowdown from './_components/latest-fight-showdown';
+import TopThreeRanking from './_components/top-three-ranking';
+import { getRank, upcomingEvent } from './lib/data';
+import { loadFights, loadFighters } from './lib/supabase-data';
 
-export default function Home() {
+export default async function Home() {
+  const [fighters, fights] = await Promise.all([loadFighters(), loadFights()]);
+  const ranking = [...fighters]
+    .sort((a, b) => b.points - a.points)
+    .map((fighter, index) => ({ position: index + 1, ...fighter, rank: getRank(fighter.points) }));
+
+  const champion = ranking[0];
+  const latestFight = fights[0];
+
+  const winner = latestFight && latestFight.winner.toLowerCase() !== 'empate'
+    ? fighters.find((f) => f.alias.toLowerCase() === latestFight.winner.toLowerCase())
+    : undefined;
+
+  const loser = latestFight && winner
+    ? fighters.find((f) => {
+        const a = latestFight.fighterA.toLowerCase();
+        const b = latestFight.fighterB.toLowerCase();
+        const w = winner.alias.toLowerCase();
+        return f.alias.toLowerCase() === (a === w ? b : a);
+      })
+    : undefined;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-8">
+      <section
+        className="panel blood-glow relative overflow-hidden rounded-md p-6 sm:p-10"
+        style={{
+          backgroundImage:
+            "linear-gradient(120deg, rgba(5,5,5,0.92) 15%, rgba(5,5,5,0.7) 45%, rgba(146,8,8,0.45) 100%), url('/images/base/fondo-home-togikai.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="mist absolute -right-10 -top-10 h-40 w-40 rounded-full bg-blood/20 blur-3xl" aria-hidden />
+        <p className="font-title text-sm tracking-[0.2em] text-blood">ARCHIVO CLASIFICADO // NIVEL AKUMA-TACHI</p>
+        <h1 className="font-title mt-2 text-5xl tracking-[0.12em] text-gold sm:text-7xl">悪魔</h1>
+        <p className="mt-1 text-lg tracking-[0.22em] text-zinc-300">TOGIKAI</p>
+        <p className="mt-4 max-w-2xl text-zinc-300">
+          No todos los nombres llegan al ranking. Algunos solo quedan en el suelo.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link className="rounded-sm border border-blood bg-blood/20 px-4 py-2 text-sm tracking-wider text-zinc-100 hover:bg-blood/35" href="/ranking">Ver ranking</Link>
+          <Link className="rounded-sm border border-zinc-700 bg-black/30 px-4 py-2 text-sm tracking-wider hover:border-gold hover:text-gold" href="/luchadores">Ver luchadores</Link>
+          <Link className="rounded-sm border border-zinc-700 bg-black/30 px-4 py-2 text-sm tracking-wider hover:border-gold hover:text-gold" href="/combates">Historial de combates</Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Líder actual</p><p className="font-title text-3xl text-gold">{champion?.alias ?? '-'}</p><p className="text-sm text-zinc-300">{champion?.publicPhrase ?? '-'}</p></article>
+        <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Último combate</p><p className="font-title text-3xl text-blood">{latestFight ? `${latestFight.fighterA} vs ${latestFight.fighterB}` : '-'}</p><p className="text-sm text-zinc-300">Victoria: {latestFight?.winner ?? '-'}</p></article>
+        <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Próximo evento</p><p className="font-title text-2xl text-zinc-100">{upcomingEvent.headline}</p><p className="text-sm text-zinc-300">{upcomingEvent.name}</p></article>
+        <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Luchadores activos</p><p className="font-title text-4xl text-zinc-100">{ranking.filter((f) => f.status === 'Activo').length}</p><p className="text-sm text-zinc-300">Registro vigente</p></article>
+      </section>
+
+      <ChampionSpotlight champion={champion} />
+      <TopThreeRanking fighters={ranking.slice(0, 3)} />
+      <LatestFightShowdown latestFight={latestFight} winner={winner} loser={loser} />
     </div>
   );
 }
