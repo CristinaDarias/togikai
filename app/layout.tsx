@@ -17,7 +17,17 @@ const bodyFont = Noto_Serif_JP({
 
 export const metadata: Metadata = {
   title: 'Akuma Togikai',
-  description: 'Archivo interno de la Underground Fighting League.',
+  description: 'Honor, fuerza y destino. La Togikai es el escenario donde los luchadores demuestran quién merece dominar.',
+  openGraph: {
+    images: [
+      {
+        url: 'https://r2.fivemanage.com/q1SsM4avsfgiuCG2WmeAK/togikai/description-img.png',
+        width: 1200,
+        height: 630,
+        alt: 'Akuma Togikai - Archivo Clasificado',
+      },
+    ],
+  },
 };
 
 const links = [
@@ -38,8 +48,12 @@ export default function RootLayout({
       <body className="min-h-full overflow-x-hidden bg-obsidian text-zinc-100">
         <header className="sticky top-0 z-30 border-b border-blood/30 bg-obsidian/90 backdrop-blur">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-            <Link href="/" className="font-title text-3xl tracking-[0.18em] text-gold">
-              悪魔
+            <Link href="/" className="inline-flex items-center">
+              <img
+                src="https://r2.fivemanage.com/q1SsM4avsfgiuCG2WmeAK/Eleven_Project/Akuma-tachi-logo.png"
+                alt="Akuma-tachi logo"
+                className="h-12 w-auto object-contain"
+              />
             </Link>
             <nav className="flex gap-2 sm:gap-3">
               {links.map((link) => (
@@ -59,4 +73,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -1,6 +1,13 @@
 ﻿import 'server-only';
 
-import { fights as localFights, fighters as localFighters, type FightRecord, type Fighter } from './data';
+import {
+  fights as localFights,
+  fighters as localFighters,
+  specialFights as localSpecialFights,
+  type FightRecord,
+  type Fighter,
+  type SpecialFight,
+} from './data';
 
 type SupabaseFighter = {
   alias: string;
@@ -26,6 +33,14 @@ type SupabaseFight = {
   winner_points: number;
   loser_points: number;
   chronicle: string;
+};
+
+type SupabaseSpecialFight = {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  display_order: number;
 };
 
 function supabaseConfig() {
@@ -96,5 +111,20 @@ export async function loadFights(): Promise<FightRecord[]> {
     }));
   } catch {
     return localFights;
+  }
+}
+
+export async function loadSpecialFights(): Promise<SpecialFight[]> {
+  try {
+    const rows = await supabaseGet<SupabaseSpecialFight>('special_fights?select=*&order=display_order.asc');
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      imageUrl: row.image_url,
+      displayOrder: row.display_order,
+    }));
+  } catch {
+    return localSpecialFights;
   }
 }

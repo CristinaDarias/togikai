@@ -1,12 +1,18 @@
 ﻿import Link from 'next/link';
 import ChampionSpotlight from './_components/champion-spotlight';
 import LatestFightShowdown from './_components/latest-fight-showdown';
+import SpecialFightsCarousel from './_components/special-fights-carousel';
 import TopThreeRanking from './_components/top-three-ranking';
 import { getRank, upcomingEvent } from './lib/data';
-import { loadFights, loadFighters } from './lib/supabase-data';
+import { loadFights, loadFighters, loadSpecialFights } from './lib/supabase-data';
 
 export default async function Home() {
-  const [fighters, fights] = await Promise.all([loadFighters(), loadFights()]);
+  const [fighters, fights, specialFights] = await Promise.all([
+    loadFighters(),
+    loadFights(),
+    loadSpecialFights(),
+  ]);
+
   const ranking = [...fighters]
     .sort((a, b) => b.points - a.points)
     .map((fighter, index) => ({ position: index + 1, ...fighter, rank: getRank(fighter.points) }));
@@ -62,6 +68,7 @@ export default async function Home() {
       <ChampionSpotlight champion={champion} />
       <TopThreeRanking fighters={ranking.slice(0, 3)} />
       <LatestFightShowdown latestFight={latestFight} winner={winner} loser={loser} />
+      <SpecialFightsCarousel fights={specialFights} />
     </div>
   );
 }

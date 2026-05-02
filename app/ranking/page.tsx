@@ -12,7 +12,7 @@ export default async function RankingPage() {
 
   return (
     <section className="space-y-4">
-      <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Ranking Oficial</h1>
+      <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Ranking Provisional</h1>
       <div className="panel overflow-x-auto rounded-md">
         <table className="w-full min-w-[840px] text-left text-sm">
           <thead className="border-b border-zinc-800 text-xs tracking-[0.14em] text-zinc-400">
