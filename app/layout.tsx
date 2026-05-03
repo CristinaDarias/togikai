@@ -1,4 +1,5 @@
-﻿import type { Metadata } from 'next';
+﻿/* eslint-disable @next/next/no-img-element */
+import type { Metadata } from 'next';
 import { Bebas_Neue, Noto_Serif_JP } from 'next/font/google';
 import Link from 'next/link';
 import './globals.css';
@@ -35,6 +36,8 @@ const links = [
   { href: '/ranking', label: 'Ranking' },
   { href: '/luchadores', label: 'Luchadores' },
   { href: '/combates', label: 'Combates' },
+  { href: '/apuestas', label: 'Apuestas' },
+  { href: '/normas', label: 'Normas' },
   { href: '/admin', label: 'Admin' },
 ];
 
@@ -45,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${titleFont.variable} ${bodyFont.variable} h-full`}>
-      <body className="min-h-full overflow-x-hidden bg-obsidian text-zinc-100">
+      <body className="flex min-h-full flex-col overflow-x-hidden bg-obsidian text-zinc-100">
         <header className="sticky top-0 z-30 border-b border-blood/30 bg-obsidian/90 backdrop-blur">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
             <Link href="/" className="inline-flex items-center">
@@ -68,8 +71,27 @@ export default function RootLayout({
             </nav>
           </div>
         </header>
+
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>
+
+        <footer className="border-t border-zinc-800/80 bg-black/30">
+          <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-4 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src="https://r2.fivemanage.com/q1SsM4avsfgiuCG2WmeAK/Eleven_Project/Akuma-tachi-logo.png"
+                alt="Akuma-tachi logo"
+                className="h-10 w-auto object-contain"
+              />
+              <p className="text-sm text-zinc-300">Solo los más fuertes escriben su nombre en la Togikai.</p>
+            </div>
+            <Link href="/normas" className="text-sm tracking-[0.12em] text-zinc-300 transition hover:text-gold">
+              Normas
+            </Link>
+          </div>
+        </footer>
       </body>
     </html>
   );
 }
+
+
