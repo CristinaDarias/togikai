@@ -6,6 +6,7 @@ export type Fighter = {
   fullName: string;
   publicPhrase: string;
   imageUrl?: string;
+  imageHoverUrl?: string;
   points: number;
   wins: number;
   losses: number;

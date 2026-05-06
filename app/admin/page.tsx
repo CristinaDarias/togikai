@@ -12,6 +12,7 @@ type SupabaseFighterRow = {
   full_name: string;
   public_phrase: string | null;
   image_url: string | null;
+  image_url_hover: string | null;
   points: number;
   wins: number;
   losses: number;
@@ -113,6 +114,7 @@ export default function AdminPage() {
       fullName: row.full_name,
       publicPhrase: row.public_phrase ?? '',
       imageUrl: row.image_url ?? '',
+      imageHoverUrl: row.image_url_hover ?? '',
       points: row.points,
       wins: row.wins,
       losses: row.losses,
@@ -217,6 +219,7 @@ export default function AdminPage() {
       full_name: fighterForm.fullName.trim(),
       public_phrase: fighterForm.publicPhrase?.trim() || null,
       image_url: fighterForm.imageUrl?.trim() || null,
+      image_url_hover: fighterForm.imageHoverUrl?.trim() || null,
       points: fighterForm.points,
       wins: fighterForm.wins,
       losses: fighterForm.losses,
@@ -362,6 +365,7 @@ export default function AdminPage() {
             <input value={fighterForm.fullName} onChange={(e) => setFighterForm((p) => ({ ...p, fullName: e.target.value }))} placeholder="Nombre real" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <input value={fighterForm.publicPhrase ?? ''} onChange={(e) => setFighterForm((p) => ({ ...p, publicPhrase: e.target.value }))} placeholder="Frase publica" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <input value={fighterForm.imageUrl ?? ''} onChange={(e) => setFighterForm((p) => ({ ...p, imageUrl: e.target.value }))} placeholder="URL imagen" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+            <input value={fighterForm.imageHoverUrl ?? ''} onChange={(e) => setFighterForm((p) => ({ ...p, imageHoverUrl: e.target.value }))} placeholder="URL imagen hover (segunda imagen)" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <input value={fighterForm.style} onChange={(e) => setFighterForm((p) => ({ ...p, style: e.target.value }))} placeholder="Estilo de lucha" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <div className="grid grid-cols-2 gap-2">
               <input type="number" value={fighterForm.points} onChange={(e) => setFighterForm((p) => ({ ...p, points: Number(e.target.value) }))} placeholder="Puntos" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />

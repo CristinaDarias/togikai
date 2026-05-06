@@ -15,6 +15,7 @@ type SupabaseFighter = {
   full_name: string;
   public_phrase: string | null;
   image_url: string | null;
+  image_url_hover: string | null;
   points: number;
   wins: number;
   losses: number;
@@ -81,6 +82,7 @@ export async function loadFighters(): Promise<Fighter[]> {
       fullName: row.full_name,
       publicPhrase: row.public_phrase ?? '',
       imageUrl: row.image_url ?? undefined,
+      imageHoverUrl: row.image_url_hover ?? undefined,
       points: row.points,
       wins: row.wins,
       losses: row.losses,

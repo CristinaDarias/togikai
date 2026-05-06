@@ -15,6 +15,11 @@ function getFighterImage(alias: string, imageUrl?: string) {
   return '/images/fighters/sin-foto.png';
 }
 
+function getHoverImage(alias: string, imageUrl?: string, hoverUrl?: string) {
+  if (hoverUrl && hoverUrl.trim()) return hoverUrl;
+  return getFighterImage(alias, imageUrl);
+}
+
 export default function FightersExplorer({ fighters }: { fighters: FighterWithRank[] }) {
   const [query, setQuery] = useState('');
 
@@ -51,7 +56,15 @@ export default function FightersExplorer({ fighters }: { fighters: FighterWithRa
                 alt={`Retrato de ${fighter.alias}`}
                 fill
                 unoptimized
-                className="object-contain p-1 grayscale transition duration-500 group-hover:scale-[1.02] group-hover:grayscale-0"
+                className="object-contain p-1 grayscale transition duration-500 group-hover:scale-[1.02] group-hover:grayscale-0 group-hover:opacity-0"
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+              />
+              <Image
+                src={getHoverImage(fighter.alias, fighter.imageUrl, fighter.imageHoverUrl)}
+                alt={`Retrato alternativo de ${fighter.alias}`}
+                fill
+                unoptimized
+                className="object-contain p-1 grayscale opacity-0 transition duration-500 group-hover:scale-[1.02] group-hover:grayscale-0 group-hover:opacity-100"
                 sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" aria-hidden />
