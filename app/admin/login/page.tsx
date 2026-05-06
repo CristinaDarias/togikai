@@ -35,7 +35,7 @@ function AdminLoginForm() {
 
   return (
     <section className="panel mx-auto max-w-xl rounded-md p-6 sm:p-8">
-      <p className="text-xs tracking-[0.16em] text-zinc-500">ADMIN ACCESS // SUPABASE AUTH</p>
+      <p className="text-xs tracking-[0.16em] text-zinc-500">ADMIN ACCESS</p>
       <h1 className="font-title mt-1 text-5xl tracking-[0.14em] text-gold">Login Admin</h1>
       <p className="mt-3 text-sm text-zinc-400">Accede con tu usuario administrador.</p>
       {error && <p className="mt-3 rounded border border-blood/40 bg-blood/10 px-3 py-2 text-sm text-red-200">{error}</p>}
