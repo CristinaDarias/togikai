@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 const links = [
-  { href: '/', label: 'Home' },
+  { href: '/', label: 'Inicio' },
   { href: '/ranking', label: 'Ranking' },
   { href: '/luchadores', label: 'Luchadores' },
   { href: '/combates', label: 'Combates' },
