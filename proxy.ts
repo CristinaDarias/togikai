@@ -8,7 +8,7 @@ function getAllowlist() {
     .filter(Boolean);
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
   const isLoginPage = pathname === '/admin/login';
