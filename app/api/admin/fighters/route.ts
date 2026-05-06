@@ -1,7 +1,11 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { requireSupabaseAdmin } from '../../../lib/admin-supabase-auth';
 import { supabaseRequest } from '../../../lib/supabase-admin';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const response = await supabaseRequest('fighters?select=*&order=points.desc');
     const data = await response.json();
@@ -12,6 +16,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const payload = await request.json();
     await supabaseRequest('fighters', {
@@ -26,6 +33,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const payload = await request.json();
     const alias = payload.alias;
@@ -42,6 +52,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const { searchParams } = new URL(request.url);
     const alias = searchParams.get('alias');

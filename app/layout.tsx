@@ -72,9 +72,9 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>
+        <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>
 
-        <footer className="border-t border-zinc-800/80 bg-black/30">
+        <footer className="relative z-10 border-t border-zinc-800/80 bg-black/30">
           <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-4 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <img
@@ -93,5 +93,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-

@@ -1,7 +1,11 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { requireSupabaseAdmin } from '../../../lib/admin-supabase-auth';
 import { supabaseRequest, syncFighterRecordsFromFights } from '../../../lib/supabase-admin';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const response = await supabaseRequest('fights?select=*&order=id.desc');
     const data = await response.json();
@@ -12,6 +16,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const payload = await request.json();
     await supabaseRequest('fights', {
@@ -27,6 +34,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const payload = await request.json();
     const id = payload.id;
@@ -44,6 +54,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requireSupabaseAdmin(request);
+  if (auth) return auth;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -56,4 +69,3 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
-

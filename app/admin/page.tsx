@@ -1,7 +1,10 @@
-﻿'use client';
+'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 import type { FightRecord, Fighter } from '../lib/data';
+import { createSupabaseBrowserClient } from '../lib/supabase-browser';
 
 type SupabaseFighterRow = {
   alias: string;
@@ -41,11 +44,11 @@ type AdminFightForm = {
   chronicle: string;
 };
 
-const ACCESS_CODE = 'ONI-ADMIN';
+const supabase = createSupabaseBrowserClient();
 
 const emptyFighterForm: Fighter = {
   alias: '',
-  codename: '悪魔',
+  codename: '',
   fullName: '',
   publicPhrase: '',
   imageUrl: '',
@@ -70,9 +73,9 @@ const emptyFightForm: AdminFightForm = {
 };
 
 export default function AdminPage() {
-  const [access, setAccess] = useState('');
-  const [authorized, setAuthorized] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [fightersState, setFightersState] = useState<Fighter[]>([]);
@@ -85,6 +88,23 @@ export default function AdminPage() {
   const [editingFightId, setEditingFightId] = useState<string | null>(null);
 
   const aliases = useMemo(() => fightersState.map((f) => f.alias), [fightersState]);
+
+  function authHeaders(currentSession?: Session | null) {
+    const active = currentSession ?? session;
+    if (!active?.access_token) return null;
+    return `Bearer ${active.access_token}`;
+  }
+
+  async function adminFetch(url: string, init?: RequestInit, currentSession?: Session | null) {
+    const headers = new Headers(init?.headers);
+    const auth = authHeaders(currentSession);
+    if (auth) headers.set('Authorization', auth);
+
+    return fetch(url, {
+      ...init,
+      headers,
+    });
+  }
 
   function mapFighter(row: SupabaseFighterRow): Fighter {
     return {
@@ -115,14 +135,24 @@ export default function AdminPage() {
     };
   }
 
-  async function loadAll() {
+  async function loadAll(currentSession: Session) {
     setLoading(true);
     setError('');
     try {
       const [fightersRes, fightsRes] = await Promise.all([
-        fetch('/api/admin/fighters', { cache: 'no-store' }),
-        fetch('/api/admin/fights', { cache: 'no-store' }),
+        adminFetch('/api/admin/fighters', { cache: 'no-store' }, currentSession),
+        adminFetch('/api/admin/fights', { cache: 'no-store' }, currentSession),
       ]);
+
+      if (
+        fightersRes.status === 401 ||
+        fightsRes.status === 401 ||
+        fightersRes.status === 403 ||
+        fightsRes.status === 403
+      ) {
+        setSession(null);
+        throw new Error('No autorizado. Revisa permisos de admin.');
+      }
 
       if (!fightersRes.ok || !fightsRes.ok) throw new Error('No se pudo cargar desde Supabase');
 
@@ -138,10 +168,34 @@ export default function AdminPage() {
     }
   }
 
-  async function enterAdmin() {
-    if (access.trim().toUpperCase() !== ACCESS_CODE) return;
-    setAuthorized(true);
-    await loadAll();
+  useEffect(() => {
+    async function bootstrap() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session ?? null);
+      if (data.session) await loadAll(data.session);
+      else setLoading(false);
+    }
+
+    bootstrap();
+
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  async function logout() {
+    await supabase.auth.signOut();
+    setSession(null);
+    setFightersState([]);
+    setFightsState([]);
+    setEditingFighterAlias(null);
+    setEditingFightId(null);
+    setFighterForm(emptyFighterForm);
+    setFightForm(emptyFightForm);
+    router.replace('/admin/login');
+    router.refresh();
   }
 
   function startEditFighter(fighter: Fighter) {
@@ -172,7 +226,7 @@ export default function AdminPage() {
     };
 
     const method = editingFighterAlias ? 'PATCH' : 'POST';
-    const response = await fetch('/api/admin/fighters', {
+    const response = await adminFetch('/api/admin/fighters', {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -185,13 +239,13 @@ export default function AdminPage() {
     }
 
     cancelEditFighter();
-    await loadAll();
+    if (session) await loadAll(session);
   }
 
   async function deleteFighter(alias: string) {
-    if (!window.confirm(`¿Eliminar al luchador ${alias}?`)) return;
+    if (!window.confirm(`Eliminar al luchador ${alias}?`)) return;
 
-    const response = await fetch(`/api/admin/fighters?alias=${encodeURIComponent(alias)}`, {
+    const response = await adminFetch(`/api/admin/fighters?alias=${encodeURIComponent(alias)}`, {
       method: 'DELETE',
     });
 
@@ -202,7 +256,7 @@ export default function AdminPage() {
     }
 
     if (editingFighterAlias === alias) cancelEditFighter();
-    await loadAll();
+    if (session) await loadAll(session);
   }
 
   function startEditFight(fight: FightRecord) {
@@ -237,11 +291,11 @@ export default function AdminPage() {
       method: fightForm.method,
       winner_points: Number(fightForm.winnerPoints || 0),
       loser_points: Number(fightForm.loserPoints || 0),
-      chronicle: fightForm.chronicle || 'Sin crónica registrada.',
+      chronicle: fightForm.chronicle || 'Sin cronica registrada.',
     };
 
     const method = editingFightId ? 'PATCH' : 'POST';
-    const response = await fetch('/api/admin/fights', {
+    const response = await adminFetch('/api/admin/fights', {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -254,13 +308,13 @@ export default function AdminPage() {
     }
 
     cancelEditFight();
-    await loadAll();
+    if (session) await loadAll(session);
   }
 
   async function deleteFight(id: string) {
-    if (!window.confirm(`¿Eliminar el combate ${id}?`)) return;
+    if (!window.confirm(`Eliminar el combate ${id}?`)) return;
 
-    const response = await fetch(`/api/admin/fights?id=${encodeURIComponent(id)}`, {
+    const response = await adminFetch(`/api/admin/fights?id=${encodeURIComponent(id)}`, {
       method: 'DELETE',
     });
 
@@ -271,37 +325,42 @@ export default function AdminPage() {
     }
 
     if (editingFightId === id) cancelEditFight();
-    await loadAll();
+    if (session) await loadAll(session);
   }
 
-  if (!authorized) {
+  if (loading && !session) {
     return (
       <section className="panel mx-auto max-w-xl rounded-md p-6 sm:p-8">
-        <p className="text-xs tracking-[0.16em] text-zinc-500">ADMIN ACCESS // RESTRICTED</p>
-        <h1 className="font-title mt-1 text-5xl tracking-[0.14em] text-gold">Panel Admin</h1>
-        <p className="mt-3 text-sm text-zinc-400">Acceso interno para gestionar luchadores y combates.</p>
-        <div className="mt-5 flex gap-2">
-          <input value={access} onChange={(e) => setAccess(e.target.value)} placeholder="Clave de acceso" className="w-full rounded border border-zinc-700 bg-black/40 px-3 py-2 text-sm" />
-          <button onClick={enterAdmin} className="rounded border border-blood bg-blood/20 px-4 py-2 text-sm hover:bg-blood/35">Entrar</button>
-        </div>
+        <p className="text-sm text-zinc-400">Verificando acceso...</p>
+      </section>
+    );
+  }
+
+  if (!session) {
+    return (
+      <section className="panel mx-auto max-w-xl rounded-md p-6 sm:p-8">
+        <p className="text-sm text-zinc-400">Redirigiendo al login de administracion...</p>
       </section>
     );
   }
 
   return (
     <section className="space-y-6">
-      <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Panel Admin</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Panel Admin</h1>
+        <button onClick={logout} className="rounded border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-blood hover:text-blood">Cerrar sesion</button>
+      </div>
       {error && <p className="rounded border border-blood/40 bg-blood/10 px-3 py-2 text-sm text-red-200">{error}</p>}
-      {loading && <p className="text-sm text-zinc-400">Sincronizando con Supabase...</p>}
+      {loading && <p className="text-sm text-zinc-400">Sincronizando...</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <article className="panel rounded-md p-5">
           <h2 className="font-title text-3xl text-zinc-100">{editingFighterAlias ? 'Editar Luchador' : 'Nuevo Luchador'}</h2>
           <div className="mt-4 grid gap-2 text-sm">
             <input value={fighterForm.alias} onChange={(e) => setFighterForm((p) => ({ ...p, alias: e.target.value }))} placeholder="Alias" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
-            <input value={fighterForm.codename} onChange={(e) => setFighterForm((p) => ({ ...p, codename: e.target.value }))} placeholder="Codename (ej. 悪魔)" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+            <input value={fighterForm.codename} onChange={(e) => setFighterForm((p) => ({ ...p, codename: e.target.value }))} placeholder="Codename" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <input value={fighterForm.fullName} onChange={(e) => setFighterForm((p) => ({ ...p, fullName: e.target.value }))} placeholder="Nombre real" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
-            <input value={fighterForm.publicPhrase ?? ''} onChange={(e) => setFighterForm((p) => ({ ...p, publicPhrase: e.target.value }))} placeholder="Frase pública (visible en la web)" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+            <input value={fighterForm.publicPhrase ?? ''} onChange={(e) => setFighterForm((p) => ({ ...p, publicPhrase: e.target.value }))} placeholder="Frase publica" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <input value={fighterForm.imageUrl ?? ''} onChange={(e) => setFighterForm((p) => ({ ...p, imageUrl: e.target.value }))} placeholder="URL imagen" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <input value={fighterForm.style} onChange={(e) => setFighterForm((p) => ({ ...p, style: e.target.value }))} placeholder="Estilo de lucha" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <div className="grid grid-cols-2 gap-2">
@@ -311,7 +370,7 @@ export default function AdminPage() {
               </select>
             </div>
             <div className="mt-2 flex gap-2">
-              <button onClick={saveFighter} className="rounded border border-gold bg-gold/20 px-4 py-2 hover:bg-gold/35">{editingFighterAlias ? 'Guardar cambios' : 'Añadir luchador'}</button>
+              <button onClick={saveFighter} className="rounded border border-gold bg-gold/20 px-4 py-2 hover:bg-gold/35">{editingFighterAlias ? 'Guardar cambios' : 'Anadir luchador'}</button>
               {editingFighterAlias && <button onClick={cancelEditFighter} className="rounded border border-zinc-700 px-4 py-2">Cancelar</button>}
             </div>
           </div>
@@ -325,14 +384,14 @@ export default function AdminPage() {
             <select value={fightForm.fighterA} onChange={(e) => setFightForm((p) => ({ ...p, fighterA: e.target.value }))} className="rounded border border-zinc-700 bg-black/40 px-3 py-2"><option value="">Luchador A</option>{aliases.map((a) => <option key={a}>{a}</option>)}</select>
             <select value={fightForm.fighterB} onChange={(e) => setFightForm((p) => ({ ...p, fighterB: e.target.value }))} className="rounded border border-zinc-700 bg-black/40 px-3 py-2"><option value="">Luchador B</option>{aliases.map((a) => <option key={a}>{a}</option>)}</select>
             <select value={fightForm.winner} onChange={(e) => setFightForm((p) => ({ ...p, winner: e.target.value }))} className="rounded border border-zinc-700 bg-black/40 px-3 py-2"><option value="">Empate</option>{aliases.map((a) => <option key={a}>{a}</option>)}</select>
-            <input value={fightForm.method} onChange={(e) => setFightForm((p) => ({ ...p, method: e.target.value }))} placeholder="Método" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+            <input value={fightForm.method} onChange={(e) => setFightForm((p) => ({ ...p, method: e.target.value }))} placeholder="Metodo" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <div className="grid grid-cols-2 gap-2">
               <input type="number" value={fightForm.winnerPoints} onChange={(e) => setFightForm((p) => ({ ...p, winnerPoints: e.target.value }))} placeholder="Puntos ganador" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
               <input type="number" value={fightForm.loserPoints} onChange={(e) => setFightForm((p) => ({ ...p, loserPoints: e.target.value }))} placeholder="Puntos perdedor" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             </div>
-            <textarea value={fightForm.chronicle} onChange={(e) => setFightForm((p) => ({ ...p, chronicle: e.target.value }))} placeholder="Crónica" className="min-h-24 rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+            <textarea value={fightForm.chronicle} onChange={(e) => setFightForm((p) => ({ ...p, chronicle: e.target.value }))} placeholder="Cronica" className="min-h-24 rounded border border-zinc-700 bg-black/40 px-3 py-2" />
             <div className="mt-2 flex gap-2">
-              <button onClick={saveFight} className="rounded border border-blood bg-blood/20 px-4 py-2 hover:bg-blood/35">{editingFightId ? 'Guardar cambios' : 'Añadir combate'}</button>
+              <button onClick={saveFight} className="rounded border border-blood bg-blood/20 px-4 py-2 hover:bg-blood/35">{editingFightId ? 'Guardar cambios' : 'Anadir combate'}</button>
               {editingFightId && <button onClick={cancelEditFight} className="rounded border border-zinc-700 px-4 py-2">Cancelar</button>}
             </div>
           </div>
@@ -377,4 +436,3 @@ export default function AdminPage() {
     </section>
   );
 }
-

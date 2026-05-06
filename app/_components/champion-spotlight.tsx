@@ -100,4 +100,3 @@ export default function ChampionSpotlight({ champion }: { champion?: Champion })
     </section>
   );
 }
-
