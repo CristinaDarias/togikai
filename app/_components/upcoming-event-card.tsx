@@ -38,9 +38,10 @@ function pad2(value: number) {
 
 export default function UpcomingEventCard({ name, targetDateTime, href }: UpcomingEventCardProps) {
   const targetMs = useMemo(() => getTargetMs(targetDateTime), [targetDateTime]);
-  const [countdown, setCountdown] = useState<Countdown>(() => getCountdown(targetMs));
+  const [countdown, setCountdown] = useState<Countdown | null>(null);
 
   useEffect(() => {
+    setCountdown(getCountdown(targetMs));
     const interval = setInterval(() => {
       setCountdown(getCountdown(targetMs));
     }, 1000);
@@ -55,13 +56,13 @@ export default function UpcomingEventCard({ name, targetDateTime, href }: Upcomi
     >
       <p className="text-xs tracking-[0.16em] text-zinc-400">Proximo evento</p>
       <div className="mt-1 flex items-center gap-1 text-zinc-100">
-        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown.days)}D</p>
+        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown?.days ?? 0)}D</p>
         <span className="font-title text-lg text-zinc-400">:</span>
-        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown.hours)}H</p>
+        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown?.hours ?? 0)}H</p>
         <span className="font-title text-lg text-zinc-400">:</span>
-        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown.minutes)}M</p>
+        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown?.minutes ?? 0)}M</p>
         <span className="font-title text-lg text-zinc-400">:</span>
-        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown.seconds)}S</p>
+        <p className="font-title rounded border border-zinc-700 bg-black/30 px-2 py-1 text-xl">{pad2(countdown?.seconds ?? 0)}S</p>
       </div>
       <p className="mt-1 text-sm text-zinc-300">{name}</p>
     </Link>
