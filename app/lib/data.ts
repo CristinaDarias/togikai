@@ -37,6 +37,15 @@ export type SpecialFight = {
   displayOrder: number;
 };
 
+export type CalendarEvent = {
+  id: string;
+  eventDate: string;
+  eventTime: string;
+  fightName: string;
+  fightersCalled: string;
+  matchups: string;
+};
+
 export const fighters: Fighter[] = [
   { alias: 'Amaterasu', codename: '悪魔', fullName: 'Akari Nishimura', publicPhrase: 'La luz que rompe mandíbulas en silencio', imageUrl: '/images/fighters/amaterasu.png', points: 2360, wins: 18, losses: 3, kos: 11, style: 'Kenpo de precisión y contraataque', status: 'Activo' },
   { alias: 'Gyuki', codename: '悪魔', fullName: 'Kentaro Nishimura', publicPhrase: 'Presión constante, cero piedad', imageUrl: '/images/fighters/gyuki.png', points: 2110, wins: 16, losses: 5, kos: 9, style: 'Lucha de presión, clinch brutal', status: 'Activo' },
@@ -66,6 +75,17 @@ export const specialFights: SpecialFight[] = [
   { id: 'SP-003', title: 'Silent Katana', description: 'Sin público y sin campana: solo termina por KO o rendición.', imageUrl: '/images/base/fondo-home-togikai.png', displayOrder: 3 },
   { id: 'SP-004', title: 'Iron Oath', description: 'Encuentro de honor entre escuelas rivales con jueces del clan.', imageUrl: '/images/base/background.png', displayOrder: 4 },
   { id: 'SP-005', title: 'Blood Lantern', description: 'Evento especial bajo faroles rojos en la arena subterránea.', imageUrl: '/images/base/fondo-home-togikai.png', displayOrder: 5 },
+];
+
+export const calendarEvents: CalendarEvent[] = [
+  {
+    id: 'CAL-001',
+    eventDate: '2026-05-20',
+    eventTime: '22:30',
+    fightName: 'Bloody Contract',
+    fightersCalled: 'Amaterasu, Gyuki, Taraku, Konjou',
+    matchups: 'Amaterasu vs Gyuki, Taraku vs Konjou',
+  },
 ];
 
 export const upcomingEvent = {

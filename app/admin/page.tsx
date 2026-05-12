@@ -33,6 +33,15 @@ type SupabaseFightRow = {
   chronicle: string;
 };
 
+type SupabaseCalendarEventRow = {
+  id: string;
+  event_date: string;
+  event_time: string;
+  fight_name: string;
+  fighters_called: string;
+  matchups: string | null;
+};
+
 type AdminFightForm = {
   id: string;
   date: string;
@@ -43,6 +52,15 @@ type AdminFightForm = {
   winnerPoints: string;
   loserPoints: string;
   chronicle: string;
+};
+
+type AdminCalendarForm = {
+  id: string;
+  eventDate: string;
+  eventTime: string;
+  fightName: string;
+  fightersCalled: string;
+  matchups: string;
 };
 
 const supabase = createSupabaseBrowserClient();
@@ -73,6 +91,15 @@ const emptyFightForm: AdminFightForm = {
   chronicle: '',
 };
 
+const emptyCalendarForm: AdminCalendarForm = {
+  id: '',
+  eventDate: '',
+  eventTime: '',
+  fightName: '',
+  fightersCalled: '',
+  matchups: '',
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
@@ -81,12 +108,15 @@ export default function AdminPage() {
 
   const [fightersState, setFightersState] = useState<Fighter[]>([]);
   const [fightsState, setFightsState] = useState<FightRecord[]>([]);
+  const [calendarState, setCalendarState] = useState<AdminCalendarForm[]>([]);
 
   const [fighterForm, setFighterForm] = useState<Fighter>(emptyFighterForm);
   const [fightForm, setFightForm] = useState<AdminFightForm>(emptyFightForm);
+  const [calendarForm, setCalendarForm] = useState<AdminCalendarForm>(emptyCalendarForm);
 
   const [editingFighterAlias, setEditingFighterAlias] = useState<string | null>(null);
   const [editingFightId, setEditingFightId] = useState<string | null>(null);
+  const [editingCalendarId, setEditingCalendarId] = useState<string | null>(null);
 
   const aliases = useMemo(() => fightersState.map((f) => f.alias), [fightersState]);
 
@@ -137,32 +167,48 @@ export default function AdminPage() {
     };
   }
 
+  function mapCalendar(row: SupabaseCalendarEventRow): AdminCalendarForm {
+    return {
+      id: row.id,
+      eventDate: row.event_date,
+      eventTime: row.event_time,
+      fightName: row.fight_name,
+      fightersCalled: row.fighters_called,
+      matchups: row.matchups ?? '',
+    };
+  }
+
   async function loadAll(currentSession: Session) {
     setLoading(true);
     setError('');
     try {
-      const [fightersRes, fightsRes] = await Promise.all([
+      const [fightersRes, fightsRes, calendarRes] = await Promise.all([
         adminFetch('/api/admin/fighters', { cache: 'no-store' }, currentSession),
         adminFetch('/api/admin/fights', { cache: 'no-store' }, currentSession),
+        adminFetch('/api/admin/calendar-events', { cache: 'no-store' }, currentSession),
       ]);
 
       if (
         fightersRes.status === 401 ||
         fightsRes.status === 401 ||
+        calendarRes.status === 401 ||
         fightersRes.status === 403 ||
-        fightsRes.status === 403
+        fightsRes.status === 403 ||
+        calendarRes.status === 403
       ) {
         setSession(null);
         throw new Error('No autorizado. Revisa permisos de admin.');
       }
 
-      if (!fightersRes.ok || !fightsRes.ok) throw new Error('No se pudo cargar desde Supabase');
+      if (!fightersRes.ok || !fightsRes.ok || !calendarRes.ok) throw new Error('No se pudo cargar desde Supabase');
 
       const fightersRows = (await fightersRes.json()) as SupabaseFighterRow[];
       const fightsRows = (await fightsRes.json()) as SupabaseFightRow[];
+      const calendarRows = (await calendarRes.json()) as SupabaseCalendarEventRow[];
 
       setFightersState(fightersRows.map(mapFighter));
       setFightsState(fightsRows.map(mapFight));
+      setCalendarState(calendarRows.map(mapCalendar));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -192,10 +238,13 @@ export default function AdminPage() {
     setSession(null);
     setFightersState([]);
     setFightsState([]);
+    setCalendarState([]);
     setEditingFighterAlias(null);
     setEditingFightId(null);
+    setEditingCalendarId(null);
     setFighterForm(emptyFighterForm);
     setFightForm(emptyFightForm);
+    setCalendarForm(emptyCalendarForm);
     router.replace('/admin/login');
     router.refresh();
   }
@@ -331,6 +380,62 @@ export default function AdminPage() {
     if (session) await loadAll(session);
   }
 
+  async function saveCalendarEvent() {
+    if (!calendarForm.id || !calendarForm.eventDate || !calendarForm.eventTime || !calendarForm.fightName || !calendarForm.fightersCalled || !calendarForm.matchups) return;
+
+    const payload = {
+      id: calendarForm.id,
+      event_date: calendarForm.eventDate,
+      event_time: calendarForm.eventTime,
+      fight_name: calendarForm.fightName,
+      fighters_called: calendarForm.fightersCalled,
+      matchups: calendarForm.matchups,
+    };
+
+    const method = editingCalendarId ? 'PATCH' : 'POST';
+    const response = await adminFetch('/api/admin/calendar-events', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const body = await response.json();
+      setError(body.error ?? 'Error guardando evento');
+      return;
+    }
+
+    cancelEditCalendarEvent();
+    if (session) await loadAll(session);
+  }
+
+  function startEditCalendarEvent(event: AdminCalendarForm) {
+    setEditingCalendarId(event.id);
+    setCalendarForm({ ...event });
+  }
+
+  function cancelEditCalendarEvent() {
+    setEditingCalendarId(null);
+    setCalendarForm(emptyCalendarForm);
+  }
+
+  async function deleteCalendarEvent(id: string) {
+    if (!window.confirm(`Eliminar el evento ${id}?`)) return;
+
+    const response = await adminFetch(`/api/admin/calendar-events?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const body = await response.json();
+      setError(body.error ?? 'Error eliminando evento');
+      return;
+    }
+
+    if (editingCalendarId === id) cancelEditCalendarEvent();
+    if (session) await loadAll(session);
+  }
+
   if (loading && !session) {
     return (
       <section className="panel mx-auto max-w-xl rounded-md p-6 sm:p-8">
@@ -402,6 +507,28 @@ export default function AdminPage() {
         </article>
       </div>
 
+      <article className="panel rounded-md p-5">
+        <h2 className="font-title text-3xl text-zinc-100">{editingCalendarId ? 'Editar Evento de Calendario' : 'Nuevo Evento de Calendario'}</h2>
+        <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
+          <input value={calendarForm.id} onChange={(e) => setCalendarForm((p) => ({ ...p, id: e.target.value }))} placeholder="ID (ej. CAL-010)" disabled={Boolean(editingCalendarId)} className="rounded border border-zinc-700 bg-black/40 px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60" />
+          <input type="date" value={calendarForm.eventDate} onChange={(e) => setCalendarForm((p) => ({ ...p, eventDate: e.target.value }))} className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+          <input type="time" value={calendarForm.eventTime} onChange={(e) => setCalendarForm((p) => ({ ...p, eventTime: e.target.value }))} className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+          <input value={calendarForm.fightName} onChange={(e) => setCalendarForm((p) => ({ ...p, fightName: e.target.value }))} placeholder="Nombre del combate" className="rounded border border-zinc-700 bg-black/40 px-3 py-2" />
+          <input value={calendarForm.fightersCalled} onChange={(e) => setCalendarForm((p) => ({ ...p, fightersCalled: e.target.value }))} placeholder="Convocados (separados por coma)" className="rounded border border-zinc-700 bg-black/40 px-3 py-2 md:col-span-2" />
+          <input value={calendarForm.matchups} onChange={(e) => setCalendarForm((p) => ({ ...p, matchups: e.target.value }))} placeholder="Emparejamientos (ej. Amaterasu vs Gyuki, Taraku vs Konjou)" className="rounded border border-zinc-700 bg-black/40 px-3 py-2 md:col-span-2" />
+          <div className="md:col-span-2 flex gap-2">
+            <button onClick={saveCalendarEvent} className="rounded border border-gold bg-gold/20 px-4 py-2 hover:bg-gold/35">
+              {editingCalendarId ? 'Guardar cambios' : 'Anadir evento al calendario'}
+            </button>
+            {editingCalendarId && (
+              <button onClick={cancelEditCalendarEvent} className="rounded border border-zinc-700 px-4 py-2">
+                Cancelar
+              </button>
+            )}
+          </div>
+        </div>
+      </article>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <article className="panel rounded-md p-5">
           <h3 className="font-title text-2xl text-zinc-100">Luchadores ({fightersState.length})</h3>
@@ -409,7 +536,7 @@ export default function AdminPage() {
             {fightersState.map((f) => (
               <li key={f.alias} className="rounded border border-zinc-800 px-3 py-2">
                 <div className="flex items-center justify-between gap-3">
-                  <span>[{f.codename}] {f.alias} · {f.fullName}</span>
+                  <span>[{f.codename}] {f.alias} - {f.fullName}</span>
                   <div className="flex gap-2">
                     <button onClick={() => startEditFighter(f)} className="rounded border border-zinc-700 px-2 py-1 text-xs">Editar</button>
                     <button onClick={() => deleteFighter(f.alias)} className="rounded border border-zinc-700 px-2 py-1 text-xs hover:border-blood hover:text-blood">Eliminar</button>
@@ -426,10 +553,33 @@ export default function AdminPage() {
             {fightsState.slice(0, 20).map((f) => (
               <li key={f.id} className="rounded border border-zinc-800 px-3 py-2">
                 <div className="flex items-center justify-between gap-3">
-                  <span>{f.id} · {f.fighterA} vs {f.fighterB} · {f.winner}</span>
+                  <span>{f.id} - {f.fighterA} vs {f.fighterB} - {f.winner}</span>
                   <div className="flex gap-2">
                     <button onClick={() => startEditFight(f)} className="rounded border border-zinc-700 px-2 py-1 text-xs">Editar</button>
                     <button onClick={() => deleteFight(f.id)} className="rounded border border-zinc-700 px-2 py-1 text-xs hover:border-blood hover:text-blood">Eliminar</button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="panel rounded-md p-5">
+          <h3 className="font-title text-2xl text-zinc-100">Calendario ({calendarState.length})</h3>
+          <ul className="mt-3 space-y-2 text-sm text-zinc-300">
+            {calendarState.map((ev) => (
+              <li key={ev.id} className="rounded border border-zinc-800 px-3 py-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs tracking-[0.14em] text-zinc-500">{ev.id}</p>
+                    <p className="text-zinc-100">{ev.eventDate} - {ev.eventTime}</p>
+                    <p>{ev.fightName}</p>
+                    <p className="text-zinc-400">Convocados: {ev.fightersCalled}</p>
+                    <p className="text-zinc-400">Emparejamientos: {ev.matchups || 'Por definir'}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => startEditCalendarEvent(ev)} className="rounded border border-zinc-700 px-2 py-1 text-xs">Editar</button>
+                    <button onClick={() => deleteCalendarEvent(ev.id)} className="rounded border border-zinc-700 px-2 py-1 text-xs hover:border-blood hover:text-blood">Eliminar</button>
                   </div>
                 </div>
               </li>
@@ -440,3 +590,4 @@ export default function AdminPage() {
     </section>
   );
 }
+

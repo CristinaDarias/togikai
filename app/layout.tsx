@@ -36,6 +36,7 @@ const links = [
   { href: '/ranking', label: 'Ranking' },
   { href: '/luchadores', label: 'Luchadores' },
   { href: '/combates', label: 'Combates' },
+  { href: '/calendario', label: 'Calendario' },
   { href: '/apuestas', label: 'Apuestas' },
   { href: '/normas', label: 'Normas' },
   { href: '/admin', label: 'Admin' },

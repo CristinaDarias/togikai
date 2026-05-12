@@ -4,6 +4,8 @@ import {
   fights as localFights,
   fighters as localFighters,
   specialFights as localSpecialFights,
+  calendarEvents as localCalendarEvents,
+  type CalendarEvent,
   type FightRecord,
   type Fighter,
   type SpecialFight,
@@ -42,6 +44,15 @@ type SupabaseSpecialFight = {
   description: string;
   image_url: string;
   display_order: number;
+};
+
+type SupabaseCalendarEvent = {
+  id: string;
+  event_date: string;
+  event_time: string;
+  fight_name: string;
+  fighters_called: string;
+  matchups: string | null;
 };
 
 function supabaseConfig() {
@@ -128,5 +139,21 @@ export async function loadSpecialFights(): Promise<SpecialFight[]> {
     }));
   } catch {
     return localSpecialFights;
+  }
+}
+
+export async function loadCalendarEvents(): Promise<CalendarEvent[]> {
+  try {
+    const rows = await supabaseGet<SupabaseCalendarEvent>('calendar_events?select=*&order=event_date.asc,event_time.asc');
+    return rows.map((row) => ({
+      id: row.id,
+      eventDate: row.event_date,
+      eventTime: row.event_time,
+      fightName: row.fight_name,
+      fightersCalled: row.fighters_called,
+      matchups: row.matchups ?? '',
+    }));
+  } catch {
+    return localCalendarEvents;
   }
 }

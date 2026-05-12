@@ -3,14 +3,16 @@ import ChampionSpotlight from './_components/champion-spotlight';
 import LatestFightShowdown from './_components/latest-fight-showdown';
 import SpecialFightsCarousel from './_components/special-fights-carousel';
 import TopThreeRanking from './_components/top-three-ranking';
-import { getRank, upcomingEvent } from './lib/data';
-import { loadFights, loadFighters, loadSpecialFights } from './lib/supabase-data';
+import UpcomingEventCard from './_components/upcoming-event-card';
+import { getRank } from './lib/data';
+import { loadCalendarEvents, loadFights, loadFighters, loadSpecialFights } from './lib/supabase-data';
 
 export default async function Home() {
-  const [fighters, fights, specialFights] = await Promise.all([
+  const [fighters, fights, specialFights, calendarEvents] = await Promise.all([
     loadFighters(),
     loadFights(),
     loadSpecialFights(),
+    loadCalendarEvents(),
   ]);
 
   const ranking = [...fighters]
@@ -32,6 +34,11 @@ export default async function Home() {
         return f.alias.toLowerCase() === (a === w ? b : a);
       })
     : undefined;
+
+  const now = new Date();
+  const nextCalendarEvent = calendarEvents.find(
+    (event) => new Date(`${event.eventDate}T${event.eventTime}`).getTime() >= now.getTime(),
+  );
 
   return (
     <div className="space-y-8">
@@ -61,7 +68,18 @@ export default async function Home() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Líder actual</p><p className="font-title text-3xl text-gold">{champion?.alias ?? '-'}</p><p className="text-sm text-zinc-300">{champion?.publicPhrase ?? '-'}</p></article>
         <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Último combate</p><p className="font-title text-3xl text-blood">{latestFight ? `${latestFight.fighterA} vs ${latestFight.fighterB}` : '-'}</p><p className="text-sm text-zinc-300">Victoria: {latestFight?.winner ?? '-'}</p></article>
-        <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Próximo evento</p><p className="font-title text-2xl text-zinc-100">{upcomingEvent.headline}</p><p className="text-sm text-zinc-300">{upcomingEvent.name}</p></article>
+        {nextCalendarEvent ? (
+          <UpcomingEventCard
+            name={nextCalendarEvent.fightName}
+            targetDateTime={`${nextCalendarEvent.eventDate}T${nextCalendarEvent.eventTime}`}
+            href={`/calendario#${encodeURIComponent(nextCalendarEvent.id)}`}
+          />
+        ) : (
+          <article className="panel rounded-md p-4">
+            <p className="text-xs tracking-[0.16em] text-zinc-400">Proximo evento</p>
+            <p className="font-title mt-1 text-2xl text-zinc-100">No hay eventos registrados.</p>
+          </article>
+        )}
         <article className="panel rounded-md p-4"><p className="text-xs tracking-[0.16em] text-zinc-400">Luchadores activos</p><p className="font-title text-4xl text-zinc-100">{ranking.filter((f) => f.status === 'Activo').length}</p><p className="text-sm text-zinc-300">Registro vigente</p></article>
       </section>
 
