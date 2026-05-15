@@ -1,6 +1,33 @@
 ﻿export default function NormasPage() {
   return (
     <section className="space-y-4">
+      <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Información</h1>
+      <div className="panel rounded-md p-6 text-zinc-300">
+        <p className="mb-3 text-xl text-blood">INFORMACIÓN BÁSICA</p>
+        <p className="mb-3">En este apartado se detallan los diferentes aspectos relacionados con la participación dentro de la Togikai.</p>
+        <ol className="list-decimal space-y-2 pl-5">
+          <li>La inscripción tendrá un coste de 5.000$ por luchador.</li>
+          <li>Cada temporada de la Togikai tendrá una duración de 4 semanas. Una vez finalizada la temporada, la tabla de clasificación y las puntuaciones serán reiniciadas para el inicio de la siguiente.</li>
+          <li>Los premios serán entregados al finalizar cada temporada según el rendimiento de los luchadores durante la competición.</li>
+          <li>Las recompensas estarán destinadas a los 3 mejores puestos de la clasificación general. En caso de empate en cualquiera de las posiciones premiadas, el número de recompensas se ampliará para incluir a todos los luchadores empatados.</li>
+        </ol>
+        <p className="mt-4">Cualquier duda, reclamación o consulta podrá ser tratada directamente con la organización.</p>
+      </div>
+      <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Premios y Recompensas</h1>
+      <div className="panel rounded-md p-6 text-zinc-300">
+        <p className="mb-3 text-xl text-blood">COMBATES DE LA TOGIKAI</p>
+        <p className="mb-3">Premios.</p>
+        <ol className="list-decimal space-y-2 pl-5">
+          <li>Primer premio: 25.000$ + Premio Exclusivo Togikai + 5 Soulbits</li>
+          <li>Segundo premio: 20.000$</li>
+          <li>Tercer premio: 15.000$</li>
+        </ol>
+        <p className="mt-4">El premio exclusivo Togikai será entregado al ganador del primer puesto y consistirá en un objeto único relacionado con la competición.</p>
+      </div>
+      <div className="panel rounded-md p-6 text-zinc-300">
+        <p className="mb-3 text-xl text-blood">COMBATES ESPECIALES</p>
+        <p className="mb-3">Las recompensas para los combates especiales serán determinadas por la organización y anunciadas antes del inicio de cada evento.</p>
+      </div>
       <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Normas</h1>
       <div className="panel rounded-md p-6 text-zinc-300">
         <p className="mb-3 text-xl text-blood">JUEGO LIMPIO Y RESPETO</p>
