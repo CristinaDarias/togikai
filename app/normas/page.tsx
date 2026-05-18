@@ -12,7 +12,7 @@
           <li>Las recompensas estarán destinadas a los 3 mejores puestos de la clasificación general. En caso de empate en cualquiera de las posiciones premiadas, el número de recompensas se ampliará para incluir a todos los luchadores empatados.</li>
         </ol>
         <p className="mt-4">Cualquier duda, reclamación o consulta podrá ser tratada directamente con la organización.</p>
-      </div>
+      </div>      
       <h1 className="font-title text-5xl tracking-[0.14em] text-gold">Premios y Recompensas</h1>
       <div className="panel rounded-md p-6 text-zinc-300">
         <p className="mb-3 text-xl text-blood">COMBATES DE LA TOGIKAI</p>
@@ -23,7 +23,7 @@
           <li>Tercer premio: 15.000$</li>
         </ol>
         <p className="mt-4">El premio exclusivo Togikai será entregado al ganador del primer puesto y consistirá en un objeto único relacionado con la competición.</p>
-      </div>
+      </div>      
       <div className="panel rounded-md p-6 text-zinc-300">
         <p className="mb-3 text-xl text-blood">COMBATES ESPECIALES</p>
         <p className="mb-3">Las recompensas para los combates especiales serán determinadas por la organización y anunciadas antes del inicio de cada evento.</p>

@@ -106,7 +106,7 @@ function computeScore(stat: FighterStats, maxPoints: number, maxRecent: number) 
   const experienceNorm = Math.min(stat.totalFights / 30, 1);
   const recentNorm = maxRecent > 0 ? (stat.recentPointsDiff + maxRecent) / (2 * maxRecent) : 0.5;
 
-  return pointsNorm * 0.24 + winNorm * 0.22 + koNorm * 0.1 + streakNorm * 0.12 + experienceNorm * 0.14 + recentNorm * 0.18;
+  return pointsNorm * 0.26 + winNorm * 0.22 + koNorm * 0.05 + streakNorm * 0.12 + experienceNorm * 0.18 + recentNorm * 0.17;
 }
 
 function probability(scoreA: number, scoreB: number, matchupBoost: number) {
@@ -181,9 +181,13 @@ export default function BettingBoard({ fighters, fights }: { fighters: Fighter[]
   const [fighterA, setFighterA] = useState<string | null>(null);
   const [fighterB, setFighterB] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const eligibleFighters = useMemo(
+    () => fighters.filter((fighter) => fighter.status !== 'Suspendido'),
+    [fighters],
+  );
 
   const stats = useMemo(() => {
-    const mapped = fighters.map((fighter) => {
+    const mapped = eligibleFighters.map((fighter) => {
       const totalFights = fighter.wins + fighter.losses;
       const winrate = totalFights === 0 ? 0 : (fighter.wins / totalFights) * 100;
       const koRate = fighter.wins === 0 ? 0 : (fighter.kos / fighter.wins) * 100;
@@ -199,7 +203,7 @@ export default function BettingBoard({ fighters, fights }: { fighters: Fighter[]
     });
 
     return new Map(mapped.map((item) => [item.fighter.alias.toLowerCase(), item]));
-  }, [fighters, fights]);
+  }, [eligibleFighters, fights]);
 
   const statA = fighterA ? stats.get(fighterA.toLowerCase()) : undefined;
   const statB = fighterB ? stats.get(fighterB.toLowerCase()) : undefined;
@@ -207,18 +211,18 @@ export default function BettingBoard({ fighters, fights }: { fighters: Fighter[]
   const computed = useMemo(() => {
     if (!statA || !statB) return null;
 
-    const maxPoints = Math.max(...fighters.map((f) => f.points), 1);
+    const maxPoints = Math.max(...eligibleFighters.map((f) => f.points), 1);
     const maxRecent = Math.max(...Array.from(stats.values()).map((s) => Math.abs(s.recentPointsDiff)), 1);
     const scoreA = computeScore(statA, maxPoints, maxRecent);
     const scoreB = computeScore(statB, maxPoints, maxRecent);
     const h2h = matchup(statA.fighter.alias, statB.fighter.alias, fights);
-    const h2hBias = h2h.meetings > 0 ? (h2h.winsA - h2h.winsB) / (h2h.meetings * 10) : 0;
+    const h2hBias = h2h.meetings > 0 ? (h2h.winsA - h2h.winsB) / (h2h.meetings * 18) : 0;
 
     return {
       result: probability(scoreA, scoreB, h2hBias),
       matchup: h2h,
     };
-  }, [statA, statB, fighters, fights, stats]);
+  }, [statA, statB, eligibleFighters, fights, stats]);
 
   function onDrop(slot: 'A' | 'B', alias: string) {
     if (!alias) return;
@@ -231,9 +235,9 @@ export default function BettingBoard({ fighters, fights }: { fighters: Fighter[]
 
   const filteredFighters = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return fighters;
-    return fighters.filter((fighter) => fighter.alias.toLowerCase().includes(q));
-  }, [fighters, search]);
+    if (!q) return eligibleFighters;
+    return eligibleFighters.filter((fighter) => fighter.alias.toLowerCase().includes(q));
+  }, [eligibleFighters, search]);
 
   return (
     <section className="space-y-6">

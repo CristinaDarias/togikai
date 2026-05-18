@@ -1,7 +1,8 @@
-﻿import Image from 'next/image';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getRank } from '../../lib/data';
 import { loadFights, loadFighters } from '../../lib/supabase-data';
+import FightHistoryPaginated from './_components/fight-history-paginated';
 
 function getFighterImage(alias: string, imageUrl?: string) {
   if (imageUrl && imageUrl.trim()) return imageUrl;
@@ -29,6 +30,8 @@ export default async function FighterProfilePage(props: PageProps<'/luchadores/[
   const fightHistory = fights.filter((fight) =>
     [fight.fighterA.toLowerCase(), fight.fighterB.toLowerCase()].includes(fighter.alias.toLowerCase()),
   );
+  const totalFights = fighter.wins + fighter.losses;
+  const winrate = totalFights === 0 ? 0 : (fighter.wins / totalFights) * 100;
 
   return (
     <section className="space-y-6">
@@ -53,6 +56,7 @@ export default async function FighterProfilePage(props: PageProps<'/luchadores/[
               <p className="rounded border border-zinc-800 p-3">Rango actual: <strong className="text-gold">{fighter.rank}</strong></p>
               <p className="rounded border border-zinc-800 p-3">Puntos: <strong>{fighter.points}</strong></p>
               <p className="rounded border border-zinc-800 p-3">Record: <strong>{fighter.wins}-{fighter.losses}</strong></p>
+              <p className="rounded border border-zinc-800 p-3">Winrate: <strong>{winrate.toFixed(1)}%</strong></p>
               <p className="rounded border border-zinc-800 p-3">KOs: <strong>{fighter.kos}</strong></p>
               <p className="rounded border border-zinc-800 p-3">Estado: <strong className="text-blood">{fighter.status}</strong></p>
               <p className="rounded border border-zinc-800 p-3">Estilo: <strong>{fighter.style}</strong></p>
@@ -66,31 +70,9 @@ export default async function FighterProfilePage(props: PageProps<'/luchadores/[
         {fightHistory.length === 0 ? (
           <p className="mt-3 text-zinc-400">Sin combates registrados en la base actual.</p>
         ) : (
-          <div className="mt-4 space-y-3">
-            {fightHistory.map((fight) => {
-              const isDraw = fight.winner.toLowerCase() === 'empate';
-              const isWinner = !isDraw && fight.winner.toLowerCase() === fighter.alias.toLowerCase();
-              const rival = fight.fighterA.toLowerCase() === fighter.alias.toLowerCase() ? fight.fighterB : fight.fighterA;
-              const points = isDraw ? '0' : isWinner ? `+${fight.pointsDelta.winner}` : `${fight.pointsDelta.loser}`;
-              const outcomeLabel = isDraw ? 'Empate' : isWinner ? 'Victoria' : 'Derrota';
-              const outcomeColor = isDraw ? 'text-zinc-300' : isWinner ? 'text-gold' : 'text-blood';
-
-              return (
-                <article key={fight.id} className="rounded border border-zinc-800 bg-black/30 p-4">
-                  <p className="text-xs tracking-[0.16em] text-zinc-500">{fight.id} | {fight.date}</p>
-                  <p className="mt-1 text-sm text-zinc-300">Rival: <span className="text-zinc-100">{rival}</span></p>
-                  <p className={`text-sm ${outcomeColor}`}>
-                    Resultado: {outcomeLabel} · {fight.method}
-                  </p>
-                  <p className="text-sm text-zinc-400">Puntos: {points}</p>
-                  <p className="mt-2 text-zinc-300">{fight.chronicle}</p>
-                </article>
-              );
-            })}
-          </div>
+          <FightHistoryPaginated fights={fightHistory} fighterAlias={fighter.alias} />
         )}
       </div>
     </section>
   );
 }
-

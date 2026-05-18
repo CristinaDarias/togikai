@@ -4,7 +4,7 @@ import LatestFightShowdown from './_components/latest-fight-showdown';
 import SpecialFightsCarousel from './_components/special-fights-carousel';
 import TopThreeRanking from './_components/top-three-ranking';
 import UpcomingEventCard from './_components/upcoming-event-card';
-import { getRank } from './lib/data';
+import { buildRanking } from './lib/ranking';
 import { loadCalendarEvents, loadFights, loadFighters, loadSpecialFights } from './lib/supabase-data';
 
 export default async function Home() {
@@ -15,9 +15,7 @@ export default async function Home() {
     loadCalendarEvents(),
   ]);
 
-  const ranking = [...fighters]
-    .sort((a, b) => b.points - a.points)
-    .map((fighter, index) => ({ position: index + 1, ...fighter, rank: getRank(fighter.points) }));
+  const ranking = buildRanking(fighters, { excludeSuspended: true });
 
   const champion = ranking[0];
   const latestFight = fights[0];
@@ -90,3 +88,4 @@ export default async function Home() {
     </div>
   );
 }
+

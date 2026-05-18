@@ -5,7 +5,12 @@ import FightersExplorer from './_components/fighters-explorer';
 export default async function FightersPage() {
   const fighters = await loadFighters();
   const listing = [...fighters]
-    .sort((a, b) => a.alias.localeCompare(b.alias, 'es', { sensitivity: 'base' }))
+    .sort((a, b) => {
+      const aSuspended = a.status === 'Suspendido';
+      const bSuspended = b.status === 'Suspendido';
+      if (aSuspended !== bSuspended) return aSuspended ? 1 : -1;
+      return a.alias.localeCompare(b.alias, 'es', { sensitivity: 'base' });
+    })
     .map((fighter) => ({ ...fighter, rank: getRank(fighter.points) }));
 
   return (
