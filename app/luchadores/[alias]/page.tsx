@@ -1,7 +1,7 @@
-﻿import Image from 'next/image';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getRank } from '../../lib/data';
-import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../../lib/fighter-images';
+import { getFighterImageSrc } from '../../lib/fighter-images';
 import { loadFights, loadFighters } from '../../lib/supabase-data';
 import FightHistoryPaginated from './_components/fight-history-paginated';
 
@@ -35,9 +35,6 @@ export default async function FighterProfilePage(props: PageProps<'/luchadores/[
               src={getFighterImageSrc(fighter.alias, fighter.imageUrl)}
               alt={`Retrato de ${fighter.alias}`}
               fill
-              onError={(event) => {
-                event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
-              }}
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 280px"
             />
@@ -71,3 +68,4 @@ export default async function FighterProfilePage(props: PageProps<'/luchadores/[
     </section>
   );
 }
+

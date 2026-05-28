@@ -1,6 +1,6 @@
-﻿import Image from 'next/image';
+import Image from 'next/image';
 import type { Fighter } from '../lib/data';
-import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../lib/fighter-images';
+import { getFighterImageSrc } from '../lib/fighter-images';
 
 type RankedFighter = Fighter & { position: number; rank: string };
 
@@ -33,9 +33,6 @@ export default function TopThreeRanking({ fighters }: { fighters: RankedFighter[
                   src={getFighterImageSrc(fighter.alias, fighter.imageUrl)}
                   alt={`Top ${fighter.position}: ${fighter.alias}`}
                   fill
-                  onError={(event) => {
-                    event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
-                  }}
                   className={`object-cover ${isFirst ? '' : 'grayscale-[0.15]'}`}
                   sizes="(max-width: 768px) 100vw, 260px"
                 />
@@ -51,3 +48,5 @@ export default function TopThreeRanking({ fighters }: { fighters: RankedFighter[
     </section>
   );
 }
+
+
