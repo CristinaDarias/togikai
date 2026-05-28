@@ -53,7 +53,7 @@ export default function SpecialFightsCarousel({ fights }: { fights: SpecialFight
               }}
             >
               <div className="relative mb-2 aspect-[4/3] w-full overflow-hidden rounded">
-                <Image src={fight.imageUrl} alt={fight.title} fill unoptimized className="object-cover" sizes="280px" />
+                <Image src={fight.imageUrl} alt={fight.title} fill className="object-cover" sizes="280px" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" aria-hidden />
               </div>
               <h3 className="font-title text-2xl text-zinc-100">{fight.title}</h3>
@@ -65,3 +65,4 @@ export default function SpecialFightsCarousel({ fights }: { fights: SpecialFight
     </section>
   );
 }
+

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FightRecord, Fighter } from '../../lib/data';
+import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../../lib/fighter-images';
 
 type FighterStats = {
   fighter: Fighter;
@@ -19,13 +20,6 @@ type MatchupStats = {
   winsB: number;
   draws: number;
 };
-
-function getFighterImage(alias: string, imageUrl?: string) {
-  if (imageUrl && imageUrl.trim()) return imageUrl;
-  const slug = alias.toLowerCase();
-  if (slug === 'amaterasu' || slug === 'gyuki') return `/images/fighters/${slug}.png`;
-  return '/images/fighters/sin-foto.png';
-}
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -159,7 +153,16 @@ function FighterSlotCard({ label, stat }: { label: string; stat?: FighterStats }
   return (
     <div className="h-full rounded-md border border-zinc-700/80 bg-black/35 p-4">
       <div className="relative mb-4 aspect-[3/4] w-full overflow-hidden rounded">
-        <Image src={getFighterImage(stat.fighter.alias, stat.fighter.imageUrl)} alt={stat.fighter.alias} fill unoptimized className="object-cover" sizes="420px" />
+        <Image
+          src={getFighterImageSrc(stat.fighter.alias, stat.fighter.imageUrl)}
+          alt={stat.fighter.alias}
+          fill
+          onError={(event) => {
+            event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+          }}
+          className="object-cover"
+          sizes="420px"
+        />
       </div>
       <h3 className="font-title text-4xl text-gold">{stat.fighter.alias}</h3>
       <p className="mb-3 text-sm text-zinc-300">{stat.fighter.publicPhrase}</p>
@@ -270,7 +273,16 @@ export default function BettingBoard({ fighters, fights }: { fighters: Fighter[]
                 className="min-w-[170px] cursor-pointer rounded-md border border-zinc-700 bg-black/35 p-2"
               >
                 <div className="relative mb-2 aspect-square w-full overflow-hidden rounded">
-                  <Image src={getFighterImage(fighter.alias, fighter.imageUrl)} alt={fighter.alias} fill unoptimized className="object-cover" sizes="160px" />
+                  <Image
+                    src={getFighterImageSrc(fighter.alias, fighter.imageUrl)}
+                    alt={fighter.alias}
+                    fill
+                    onError={(event) => {
+                      event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+                    }}
+                    className="object-cover"
+                    sizes="160px"
+                  />
                 </div>
                 <p className="font-title text-2xl text-zinc-100">{fighter.alias}</p>
                 <p className="text-xs text-zinc-400">Winrate: {winrate.toFixed(1)}%</p>
@@ -306,3 +318,5 @@ export default function BettingBoard({ fighters, fights }: { fighters: Fighter[]
     </section>
   );
 }
+
+

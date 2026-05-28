@@ -4,21 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { Fighter } from '../../lib/data';
+import { FALLBACK_FIGHTER_IMAGE, getFighterHoverImageSrc, getFighterImageSrc } from '../../lib/fighter-images';
 
 type FighterWithRank = Fighter & { rank: string };
-
-function getFighterImage(alias: string, imageUrl?: string) {
-  if (imageUrl && imageUrl.trim()) return imageUrl;
-
-  const slug = alias.toLowerCase();
-  if (slug === 'amaterasu' || slug === 'gyuki') return `/images/fighters/${slug}.png`;
-  return '/images/fighters/sin-foto.png';
-}
-
-function getHoverImage(alias: string, imageUrl?: string, hoverUrl?: string) {
-  if (hoverUrl && hoverUrl.trim()) return hoverUrl;
-  return getFighterImage(alias, imageUrl);
-}
 
 export default function FightersExplorer({ fighters }: { fighters: FighterWithRank[] }) {
   const [query, setQuery] = useState('');
@@ -52,18 +40,22 @@ export default function FightersExplorer({ fighters }: { fighters: FighterWithRa
           <Link key={fighter.alias} href={`/luchadores/${fighter.alias.toLowerCase()}`} className="panel group rounded-md p-5 transition hover:border-blood/60 hover:shadow-[0_0_30px_rgba(146,8,8,0.22)]">
             <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded border border-zinc-800 bg-black/40">
               <Image
-                src={getFighterImage(fighter.alias, fighter.imageUrl)}
+                src={getFighterImageSrc(fighter.alias, fighter.imageUrl)}
                 alt={`Retrato de ${fighter.alias}`}
                 fill
-                unoptimized
+                onError={(event) => {
+                  event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+                }}
                 className="object-contain p-1 grayscale transition duration-500 group-hover:scale-[1.02] group-hover:grayscale-0 group-hover:opacity-0"
                 sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
               />
               <Image
-                src={getHoverImage(fighter.alias, fighter.imageUrl, fighter.imageHoverUrl)}
+                src={getFighterHoverImageSrc(fighter.alias, fighter.imageUrl, fighter.imageHoverUrl)}
                 alt={`Retrato alternativo de ${fighter.alias}`}
                 fill
-                unoptimized
+                onError={(event) => {
+                  event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+                }}
                 className="object-contain p-1 grayscale opacity-0 transition duration-500 group-hover:scale-[1.02] group-hover:grayscale-0 group-hover:opacity-100"
                 sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
               />
@@ -90,4 +82,6 @@ export default function FightersExplorer({ fighters }: { fighters: FighterWithRa
     </>
   );
 }
+
+
 

@@ -1,16 +1,9 @@
-import Image from 'next/image';
+﻿import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getRank } from '../../lib/data';
+import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../../lib/fighter-images';
 import { loadFights, loadFighters } from '../../lib/supabase-data';
 import FightHistoryPaginated from './_components/fight-history-paginated';
-
-function getFighterImage(alias: string, imageUrl?: string) {
-  if (imageUrl && imageUrl.trim()) return imageUrl;
-
-  const slug = alias.toLowerCase();
-  if (slug === 'amaterasu' || slug === 'gyuki') return `/images/fighters/${slug}.png`;
-  return '/images/fighters/sin-foto.png';
-}
 
 export async function generateStaticParams() {
   const fighters = await loadFighters();
@@ -39,10 +32,12 @@ export default async function FighterProfilePage(props: PageProps<'/luchadores/[
         <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
           <div className="relative aspect-[3/4] overflow-hidden rounded border border-zinc-800">
             <Image
-              src={getFighterImage(fighter.alias, fighter.imageUrl)}
+              src={getFighterImageSrc(fighter.alias, fighter.imageUrl)}
               alt={`Retrato de ${fighter.alias}`}
               fill
-              unoptimized
+              onError={(event) => {
+                event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+              }}
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 280px"
             />

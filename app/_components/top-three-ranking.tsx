@@ -1,15 +1,8 @@
 ﻿import Image from 'next/image';
 import type { Fighter } from '../lib/data';
+import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../lib/fighter-images';
 
 type RankedFighter = Fighter & { position: number; rank: string };
-
-function getFighterImage(alias: string, imageUrl?: string) {
-  if (imageUrl && imageUrl.trim()) return imageUrl;
-
-  const slug = alias.toLowerCase();
-  if (slug === 'amaterasu' || slug === 'gyuki') return `/images/fighters/${slug}.png`;
-  return '/images/fighters/sin-foto.png';
-}
 
 export default function TopThreeRanking({ fighters }: { fighters: RankedFighter[] }) {
   if (fighters.length < 3) return null;
@@ -37,10 +30,12 @@ export default function TopThreeRanking({ fighters }: { fighters: RankedFighter[
                 className={`relative mx-auto mt-2 aspect-[3/4] overflow-hidden rounded bg-black/35 ${isFirst ? 'max-w-[260px]' : 'max-w-[220px]'}`}
               >
                 <Image
-                  src={getFighterImage(fighter.alias, fighter.imageUrl)}
+                  src={getFighterImageSrc(fighter.alias, fighter.imageUrl)}
                   alt={`Top ${fighter.position}: ${fighter.alias}`}
                   fill
-                  unoptimized
+                  onError={(event) => {
+                    event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+                  }}
                   className={`object-cover ${isFirst ? '' : 'grayscale-[0.15]'}`}
                   sizes="(max-width: 768px) 100vw, 260px"
                 />
@@ -48,7 +43,7 @@ export default function TopThreeRanking({ fighters }: { fighters: RankedFighter[
               </div>
               <h3 className={`font-title mt-3 tracking-[0.08em] ${isFirst ? 'text-4xl text-gold' : 'text-3xl text-zinc-100'}`}>{fighter.alias}</h3>
               <p className="mt-1 text-sm text-zinc-300">{fighter.publicPhrase}</p>
-              <p className="mt-2 text-xs tracking-[0.12em] text-zinc-400">{fighter.points} pts · {fighter.rank}</p>
+              <p className="mt-2 text-xs tracking-[0.12em] text-zinc-400">{fighter.points} pts - {fighter.rank}</p>
             </article>
           );
         })}

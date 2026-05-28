@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../lib/fighter-images';
 
 type DuelFighter = {
   alias: string;
@@ -18,14 +19,6 @@ type LatestFight = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
-}
-
-function getFighterImage(alias: string, imageUrl?: string) {
-  if (imageUrl && imageUrl.trim()) return imageUrl;
-
-  const slug = alias.toLowerCase();
-  if (slug === 'amaterasu' || slug === 'gyuki') return `/images/fighters/${slug}.png`;
-  return '/images/fighters/sin-foto.png';
 }
 
 function duelOffset(progress: number, side: 'left' | 'right') {
@@ -90,7 +83,16 @@ export default function LatestFightShowdown({
       <div className="mx-auto grid min-h-[70vh] w-full max-w-7xl items-center gap-4 lg:grid-cols-[1fr_auto_1fr]">
         <div className="text-center lg:text-left" style={{ opacity, transform: `translate3d(${leftX}px,0,0)` }}>
           <div className="relative mx-auto aspect-[3/4] w-full max-w-[320px] overflow-hidden rounded bg-black/30 lg:mx-0">
-            <Image src={getFighterImage(winner.alias, winner.imageUrl)} alt={`Ganador ${winner.alias}`} fill unoptimized className="object-cover" sizes="320px" />
+            <Image
+              src={getFighterImageSrc(winner.alias, winner.imageUrl)}
+              alt={`Ganador ${winner.alias}`}
+              fill
+              onError={(event) => {
+                event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+              }}
+              className="object-cover"
+              sizes="320px"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" aria-hidden />
           </div>
           <p className="mt-3 text-xs tracking-[0.16em] text-zinc-500">VICTORIA</p>
@@ -106,10 +108,12 @@ export default function LatestFightShowdown({
         <div className="text-center lg:text-right" style={{ opacity, transform: `translate3d(${rightX}px,0,0)` }}>
           <div className="relative mx-auto aspect-[3/4] w-full max-w-[320px] overflow-hidden rounded bg-black/30 lg:ml-auto lg:mr-0">
             <Image
-              src={getFighterImage(loser.alias, loser.imageUrl)}
+              src={getFighterImageSrc(loser.alias, loser.imageUrl)}
               alt={`Perdedor ${loser.alias}`}
               fill
-              unoptimized
+              onError={(event) => {
+                event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+              }}
               className={`object-cover transition duration-300 ${loserGrayClass}`}
               sizes="320px"
             />
@@ -122,3 +126,4 @@ export default function LatestFightShowdown({
     </section>
   );
 }
+

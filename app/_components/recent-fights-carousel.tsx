@@ -3,14 +3,11 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef } from 'react';
 import type { FightRecord, Fighter } from '../lib/data';
+import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../lib/fighter-images';
 
 function getFighterImage(alias: string, fighterMap: Map<string, Fighter>) {
   const fighter = fighterMap.get(alias.toLowerCase());
-  if (fighter?.imageUrl && fighter.imageUrl.trim()) return fighter.imageUrl;
-
-  const slug = alias.toLowerCase();
-  if (slug === 'amaterasu' || slug === 'gyuki') return `/images/fighters/${slug}.png`;
-  return '/images/fighters/sin-foto.png';
+  return getFighterImageSrc(alias, fighter?.imageUrl);
 }
 
 export default function RecentFightsCarousel({
@@ -86,17 +83,35 @@ export default function RecentFightsCarousel({
           <article key={`${fight.id}-${idx}`} className="flex h-[350px] w-[calc((100%-1.5rem)/3)] shrink-0 snap-center flex-col justify-center rounded-md border border-zinc-800/80 p-4">
             <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
               <div className="relative mx-auto aspect-square w-20 overflow-hidden rounded-full border border-zinc-700 sm:w-24">
-                <Image src={getFighterImage(fight.fighterA, fighterMap)} alt={fight.fighterA} fill unoptimized className="object-cover" sizes="112px" />
+                <Image
+                  src={getFighterImage(fight.fighterA, fighterMap)}
+                  alt={fight.fighterA}
+                  fill
+                  onError={(event) => {
+                    event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+                  }}
+                  className="object-cover"
+                  sizes="112px"
+                />
               </div>
               <span className="font-title text-xl text-blood">VS</span>
               <div className="relative mx-auto aspect-square w-20 overflow-hidden rounded-full border border-zinc-700 sm:w-24">
-                <Image src={getFighterImage(fight.fighterB, fighterMap)} alt={fight.fighterB} fill unoptimized className="object-cover" sizes="112px" />
+                <Image
+                  src={getFighterImage(fight.fighterB, fighterMap)}
+                  alt={fight.fighterB}
+                  fill
+                  onError={(event) => {
+                    event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+                  }}
+                  className="object-cover"
+                  sizes="112px"
+                />
               </div>
             </div>
 
             <p className="text-xs tracking-[0.16em] text-zinc-500">{fight.id} | {fight.date}</p>
             <h3 className="font-title mt-2 text-3xl text-zinc-100">{fight.fighterA} vs {fight.fighterB}</h3>
-            <p className="text-sm text-zinc-300">Ganador: <span className="text-gold">{fight.winner}</span> · {fight.method}</p>
+            <p className="text-sm text-zinc-300">Ganador: <span className="text-gold">{fight.winner}</span> - {fight.method}</p>
             <p className="text-sm text-zinc-400">Puntos: +{fight.pointsDelta.winner} / {fight.pointsDelta.loser}</p>
             <p className="mt-3 text-zinc-300">{fight.chronicle}</p>
           </article>

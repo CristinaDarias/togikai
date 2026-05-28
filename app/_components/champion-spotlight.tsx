@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import { FALLBACK_FIGHTER_IMAGE, getFighterImageSrc } from '../lib/fighter-images';
 
 type Champion = {
   alias: string;
@@ -12,14 +13,6 @@ type Champion = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
-}
-
-function getFighterImage(alias: string, imageUrl?: string) {
-  if (imageUrl && imageUrl.trim()) return imageUrl;
-
-  const slug = alias.toLowerCase();
-  if (slug === 'amaterasu' || slug === 'gyuki') return `/images/fighters/${slug}.png`;
-  return '/images/fighters/sin-foto.png';
 }
 
 export default function ChampionSpotlight({ champion }: { champion?: Champion }) {
@@ -86,10 +79,12 @@ export default function ChampionSpotlight({ champion }: { champion?: Champion })
         >
           <div className="relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden rounded bg-black/35 lg:max-w-lg">
             <Image
-              src={getFighterImage(champion.alias, champion.imageUrl)}
+              src={getFighterImageSrc(champion.alias, champion.imageUrl)}
               alt={`Campeón actual: ${champion.alias}`}
               fill
-              unoptimized
+              onError={(event) => {
+                event.currentTarget.src = FALLBACK_FIGHTER_IMAGE;
+              }}
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 360px"
             />
@@ -100,3 +95,4 @@ export default function ChampionSpotlight({ champion }: { champion?: Champion })
     </section>
   );
 }
+
